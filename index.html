@@ -7,22 +7,116 @@
     <style>
         body { 
             margin: 0; 
-            background-color: #1a1a1a; 
+            background-color: #0f172a; 
             color: white; 
             font-family: Arial, sans-serif; 
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             overflow: hidden;
         }
-        h1 { font-size: 22px; color: #00ffcc; text-align: center; }
-        p { text-align: center; padding: 0 20px; color: #ccc; }
+        #header {
+            position: absolute;
+            top: 15px;
+            width: 100%;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        h2 { margin: 0; color: #38bdf8; font-size: 20px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        p { margin: 5px 0 0 0; font-size: 12px; color: #94a3b8; }
+        
+        /* Pastdagi ma'lumotlar paneli (Ahmedov darsligi asosida) */
+        #info-card {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 1px solid #334155;
+            padding: 15px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+        #bone-title { font-size: 16px; font-weight: bold; color: #38bdf8; margin-bottom: 4px; }
+        #bone-latin { font-size: 13px; font-style: italic; color: #cbd5e1; margin-bottom: 8px; }
+        #bone-desc { font-size: 12px; color: #94a3b8; line-height: 1.4; }
     </style>
 </head>
 <body>
-    <h1>🦴 O'zbekcha 3D Anatomiya</h1>
-    <p>I. Ahmedov darsligi asosidagi dasturning sinov oynasi muvaffaqiyatli ishga tushdi!</p>
+
+    <div id="header">
+        <h2>🦴 O'zbekcha 3D Anatomiya</h2>
+        <p>I. Ahmedov darsligi va Lotincha terminologiya</p>
+    </div>
+
+    <!-- 3D Render uchun konteyner -->
+    <div id="canvas-container"></div>
+
+    <div id="info-card">
+        <div id="bone-title">Yelka suyagi (Model)</div>
+        <div id="bone-latin">Os humeri / Humerus</div>
+        <div id="bone-desc">Naysimon uzun suyak bo'lib, tanasi va ikki uchi (epifizlari)dan iborat. Yuqori uchi kurak suyagi bilan bo'g'im hosil qiladi.</div>
+    </div>
+
+    <!-- Three.js Kutubxonasi -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Sahnani yaratish
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Yoritish (Lighting)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.DirectionalLight(0xffffff, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        // Sinov uchun anatomik 3D shakl (Skelet/Suyakni eslatuvchi silindr va sfera kompozitsiyasi)
+        const group = new THREE.Group();
+
+        const boneMaterial = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 });
+        
+        // Suyak tanasi (Naysimon qism)
+        const shaftGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 32);
+        const shaft = new THREE.Mesh(shaftGeo, boneMaterial);
+        group.add(shaft);
+
+        // Yuqori uchi (Epifiz - bosh qismi)
+        const headGeo = new THREE.SphereGeometry(0.5, 32, 32);
+        headGeo.scale(1, 0.8, 1);
+        const head = new THREE.Mesh(headGeo, boneMaterial);
+        head.position.y = 1.6;
+        group.add(head);
+
+        // Pastki uchi
+        const bottomGeo = new THREE.CylinderGeometry(0.5, 0.4, 0.6, 32);
+        const bottom = new THREE.Mesh(bottomGeo, boneMaterial);
+        bottom.position.y = -1.6;
+        group.add(bottom);
+
+        scene.add(group);
+
+        camera.position.z = 5;
+
+        // Animatsiya (Modelni sekin aylantirish)
+        function animate() {
+            requestAnimationFrame(animate);
+            group.rotation.y += 0.008;
+            group.rotation.x += 0.003;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Oyna o'lchami o'zgarganda moslashish
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
